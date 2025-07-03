@@ -37,56 +37,60 @@ class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(2, 64),
+            nn.Linear(2, 128),
             nn.ReLU(),
-            nn.Linear(64, 64),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, 3)
         )
     def forward(self, x):
         return self.net(x)
+def main():
+    model = Net()
 
-model = Net()
 
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    criterion = nn.MSELoss()
 
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-criterion = nn.MSELoss()
+    # 训练
+    EPOCHS = 100
+    for epoch in range(EPOCHS):
+        model.train()
+        total_loss = 0
+        for xb, yb in train_loader:
+            optimizer.zero_grad()
+            pred = model(xb)
+            loss = criterion(pred, yb)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item() * xb.size(0)
+        avg_loss = total_loss / len(train_loader.dataset)
+        print(f"Epoch {epoch+1}/{EPOCHS}, Loss: {avg_loss:.4f}")
 
-# 训练
-EPOCHS = 100
-for epoch in range(EPOCHS):
-    model.train()
-    total_loss = 0
-    for xb, yb in train_loader:
-        optimizer.zero_grad()
-        pred = model(xb)
-        loss = criterion(pred, yb)
-        loss.backward()
-        optimizer.step()
-        total_loss += loss.item() * xb.size(0)
-    avg_loss = total_loss / len(train_loader.dataset)
-    print(f"Epoch {epoch+1}/{EPOCHS}, Loss: {avg_loss:.4f}")
+    # 测试
+    model.eval()
+    with torch.no_grad():
+        preds = []
+        trues = []
+        for xb, yb in test_loader:
+            pred = model(xb)
+            preds.append(pred.numpy())
+            trues.append(yb.numpy())
+        preds = np.concatenate(preds, axis=0)
+        trues = np.concatenate(trues, axis=0)
+        # 反归一化
+        preds_inv = y_scaler.inverse_transform(preds)
+        trues_inv = y_scaler.inverse_transform(trues)
+        mse = np.mean((preds_inv - trues_inv) ** 2, axis=0)
+        print(f"测试集MSE: v={mse[0]:.4f}, alpha={mse[1]:.4f}, b={mse[2]:.4f}")
 
-# 测试
-model.eval()
-with torch.no_grad():
-    preds = []
-    trues = []
-    for xb, yb in test_loader:
-        pred = model(xb)
-        preds.append(pred.numpy())
-        trues.append(yb.numpy())
-    preds = np.concatenate(preds, axis=0)
-    trues = np.concatenate(trues, axis=0)
-    # 反归一化
-    preds_inv = y_scaler.inverse_transform(preds)
-    trues_inv = y_scaler.inverse_transform(trues)
-    mse = np.mean((preds_inv - trues_inv) ** 2, axis=0)
-    print(f"测试集MSE: v={mse[0]:.4f}, alpha={mse[1]:.4f}, b={mse[2]:.4f}")
-
-# 保存模型和scaler
-torch.save(model.state_dict(), 'basketball_model.pth')
-import joblib
-joblib.dump(x_scaler, 'x_scaler.save')
-joblib.dump(y_scaler, 'y_scaler.save')
-print("模型和归一化器已保存。")
+    # 保存模型和scaler
+    torch.save(model.state_dict(), 'basketball_model.pth')
+    import joblib
+    joblib.dump(x_scaler, 'x_scaler.save')
+    joblib.dump(y_scaler, 'y_scaler.save')
+    print("模型和归一化器已保存。")
+if __name__ == "__main__":
+    main()

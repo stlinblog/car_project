@@ -8,6 +8,15 @@
 - **单次测试**：手动输入或随机生成投篮起点，展示该次投篮的三维轨迹、参数（初速度、仰角、方位角）及是否命中。
 - **命中参数记录**：批量测试时，自动记录每次命中的参数，并以表格形式展示。
 
+## 物理建模说明
+
+- **空气阻力建模**：本项目在数据生成和测试阶段均已考虑空气阻力的影响。空气阻力采用指数衰减模型，速度随时间指数下降，运动方程如下：
+  - 水平/竖直方向位移：
+    - $x(t) = x_0 + \frac{v_0 \cos\alpha \cos b}{K}(1 - e^{-Kt})$
+    - $y(t) = y_0 + \frac{v_0 \cos\alpha \sin b}{K}(1 - e^{-Kt})$
+    - $z(t) = \frac{v_0 \sin\alpha}{K}(1 - e^{-Kt}) - 0.5 G t^2$
+  - 其中 $K$ 为空气阻力系数（单位 1/s），可在代码中调整。
+
 ## 目录结构
 
 ```
@@ -15,8 +24,8 @@ car_project/
   ├── app.py                   # Streamlit Web 应用主程序
   ├── basketball_dataset.csv   # 训练数据集
   ├── basketball_model.pth     # 训练好的 PyTorch 模型
-  ├── generate_dataset.py      # 数据集生成脚本
-  ├── test_model_hit_rate.py   # 命中率与轨迹测试脚本（命令行版）
+  ├── generate_dataset.py      # 数据集生成脚本（已考虑空气阻力）
+  ├── test_model_hit_rate.py   # 命中率与轨迹测试脚本（已考虑空气阻力）
   ├── train_model.py           # 模型训练脚本
   ├── x_scaler.save            # 输入归一化器
   └── y_scaler.save            # 输出归一化器
@@ -72,7 +81,7 @@ python test_model_hit_rate.py
 ## 相关说明
 
 - `basketball_model.pth`、`x_scaler.save`、`y_scaler.save` 需由 `train_model.py` 训练生成，或使用已提供的文件。
-- 投篮物理参数和篮筐位置可在代码中调整。
+- 投篮物理参数、空气阻力系数 K 和篮筐位置可在代码中调整。
 - 本项目仅用于教学、科研或兴趣用途，模型精度依赖于数据和训练效果。
 
 ## 联系方式
