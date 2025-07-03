@@ -5,6 +5,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset, random_split
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from model import Net
 torch.manual_seed(42)
 # 读取数据
 df = pd.read_csv('basketball_dataset.csv')
@@ -32,21 +33,6 @@ test_dataset = TensorDataset(tensor_X_test, tensor_y_test)
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=64)
 
-# 定义神经网络
-class Net(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(2, 128),
-            nn.ReLU(),
-            nn.Linear(128, 128),
-            nn.ReLU(),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, 3)
-        )
-    def forward(self, x):
-        return self.net(x)
 def main():
     model = Net()
 

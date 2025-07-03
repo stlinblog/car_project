@@ -5,7 +5,7 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 # 加载模型和归一化器
-from train_model import Net
+from train import Net
 model = Net()
 model.load_state_dict(torch.load('basketball_model.pth', map_location=torch.device('cpu')))
 model.eval()
